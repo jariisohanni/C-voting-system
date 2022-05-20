@@ -17,6 +17,12 @@ struct Voter
 
 };
 
+struct Voters
+{
+    struct Voter* all_voters;
+    int count;
+
+};
 #define KInvalidInput -10
 
 #define SIZEOF_ARRAY( arr ) sizeof( arr ) / sizeof( arr[0] )

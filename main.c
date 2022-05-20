@@ -2,19 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "tools.h"
 #include "menu_printer.h"
 #include "globals.h"
 
 
-int getUserInputAsOneNumber();
-void getVoterData(struct Voter* v);
-void getUserInputString(char* char_array, int length, char* what_to_ask);
-void storeVoterDataToFile(struct Voter* v);
+//int getUserInputAsOneNumber();
+void askVoterData(struct Voter* v);
+//void getUserInputString(char* char_array, int length, char* what_to_ask);
+//void storeVoterDataToFile(struct Voter* v);
 
 int main()
 {
     int programState = MainMenu;
+    struct Voters* allVoters = NULL;
 
+    allVoters = readVoterDataFromFile();
     while(1)
     {
         switch (programState)
@@ -30,45 +33,46 @@ int main()
                 else if(userSelection == RegisterVoter)
                 {
                     struct Voter new_voter = {};
-                    getVoterData(&new_voter);
+                    askVoterData(&new_voter);
                     storeVoterDataToFile(&new_voter);
+
+                    if(allVoters != NULL)
+                    {
+                        free(allVoters);
+                        allVoters = NULL;
+                    }
+
+
+                    allVoters = readVoterDataFromFile();
+
+                }
+                else if(userSelection == PrintVoters)
+                {
+                    for(int i = 0; i < allVoters->count; i++)
+                    {
+                        printf("Voter %d, SSN: %s\n", i, allVoters->all_voters[i].SSN);
+                    }
                 }
                 else
-                    return 0;
+                    goto end;
                 break;
         }
 
 
     }
 
+ end:
+    if(allVoters != NULL)
+    {
+        free(allVoters);
+        allVoters = NULL;
+    }
 
     return 0;
 }
 
-void storeVoterDataToFile(struct Voter* v)
-{
-    FILE *fp;
 
-    int file_exists = 0;
-
-    //TODO if new file, write header
-    fp = fopen("voters.txt", "r");
-
-    if(fp != NULL)
-    {
-        file_exists = 1;
-        fclose(fp);
-    }
-
-    fp = fopen("voters.txt", "a+");
-    if(file_exists == 0)
-        fprintf(fp, "%s,%s,%s,%s\n", "SSN", "are_code", "firstname", "last_name");
-
-    fprintf(fp, "%s,%s,%s,%s\n", v->SSN, v->are_code, v->firstname, v->last_name);
-    fclose(fp);
-}
-
-void getVoterData(struct Voter* v)
+void askVoterData(struct Voter* v)
 {
     while(1)
     {
@@ -102,30 +106,3 @@ ask:
 
 }
 
-void getUserInputString(char* char_array, int length, char* what_to_ask)
-{
-    printf("Please enter voters %s\n", what_to_ask);
-    fgets(char_array,length,stdin);
-    char_array[strcspn(char_array, "\n")] = 0;
-}
-/* Asks user for a input (numeric), if input non-numeric returns KERROR */
-int getUserInputAsOneNumber()
-{
-    int repeat = 1;
-    char buff[10] = {0};
-    fgets(buff,10,stdin);
-    buff[strcspn(buff, "\n")] = 0; /* removing newline character from the buffer */
-
-    if(strlen(buff) > 1)
-        return KInvalidInput;
-
-    char chr = buff[0];
-
-    int value = KInvalidInput;
-
-    if ((chr >= '0') && (chr <= '9'))
-        value = chr - '0';
-
-    return value;
-
-}
